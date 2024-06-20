@@ -10,6 +10,13 @@
   <div id="app">
     <canvas></canvas>
   </div>
-  <script src="index.js"></script>
+  <script type="importmap">
+    {
+      "imports": {
+        "socket.io-client": "https://cdn.socket.io/4.7.5/socket.io.esm.min.js"
+      }
+    }
+  </script>
+  <script src="index.js" type="module"></script>
 </body>
 </html>

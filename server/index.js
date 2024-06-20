@@ -2,10 +2,13 @@
 
 import { Server } from 'socket.io'
 
-const io = new Server()
-
-io.on('connection', socket => {
-  console.log('a user connected')
+const io = new Server(3000, {
+  cors: {
+    origin: '*'
+  }
 })
 
-io.listen(3000)
+io.on('connection', socket => {
+  console.log(socket.id)
+  socket.emit('init', { data: 'Hello, world!' })
+})
