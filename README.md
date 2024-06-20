@@ -1,1 +1,3 @@
-A simple HTML/JS/CSS starter template
+# Vertx
+
+The best multiplayer indie game!
