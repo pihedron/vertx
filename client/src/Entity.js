@@ -21,4 +21,12 @@ export default class Entity {
   constructor(health) {
     this.health = health
   }
+
+  /**
+   * @param {Vector2} pos position
+   * @param {Vector2} dim dimension
+   */
+  isTouching(pos, dim) {
+    return this.pos.x + this.dim.x > pos.x && this.pos.x < pos.x + dim.x && this.pos.y + this.dim.y > pos.y && this.pos.y < pos.y + dim.y
+  }
 }

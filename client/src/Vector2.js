@@ -42,4 +42,10 @@ export default class Vector2 {
     this.y *= vec.y
     return this
   }
+
+  round() {
+    this.x = Math.round(this.x)
+    this.y = Math.round(this.y)
+    return this
+  }
 }

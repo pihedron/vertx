@@ -10,4 +10,10 @@ if (!canvas) {
   throw new Error('missing canvas')
 }
 
-const game = new Game(socket, canvas)
+const map = 
+`
+__
+##
+##
+`.trim()
+const game = new Game(socket, canvas, map)
