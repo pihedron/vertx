@@ -9,6 +9,6 @@ const io = new Server(3000, {
 })
 
 io.on('connection', socket => {
-  console.log(socket.id)
-  socket.emit('init', { data: 'Hello, world!' })
+  console.log(socket.handshake.address)
+  socket.emit('init')
 })
