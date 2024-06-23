@@ -47,4 +47,13 @@ export default class World {
   at(x, y) {
     return y * this.dim.x + x
   }
+
+  /**
+   * @param {number} x
+   * @param {number} y
+   */
+  read(x, y) {
+    if (x < 0 || x >= this.dim.x || y < 0 || y >= this.dim.y) return 0
+    return this.grid[this.at(x, y)]
+  }
 }

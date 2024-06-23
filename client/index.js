@@ -12,8 +12,9 @@ if (!canvas) {
 
 const map = 
 `
-__
-##
-##
+__#_
+####
+#___
+####
 `.trim()
 const game = new Game(socket, canvas, map)

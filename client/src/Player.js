@@ -7,7 +7,10 @@ export default class Player extends Entity {
   movePower = 4
 
   /** @type {number} */
-  jumpPower = 4
+  jumpPower = 24
+
+  /** @type {boolean} */
+  isGrounded = false
 
   constructor() {
     super(8)
