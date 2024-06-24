@@ -7,6 +7,7 @@ export default class World {
    * @type {Record<string, number>}
    */
   indexer = {
+    '*': -1,
     '_': 0,
     '#': 1,
   }
@@ -16,6 +17,9 @@ export default class World {
    * @type {number[]} 
    */
   grid = []
+
+  /** @type {Vector2} */
+  spawn
 
   /** @type {Vector2} */
   dim
@@ -34,6 +38,9 @@ export default class World {
       const cells = row.split('')
       for (let x = 0; x < cells.length; x++) {
         const cell = cells[x]
+        if (cell === '*') {
+          this.spawn = new Vector2(x, y)
+        }
         this.grid[this.at(x, y)] = this.indexer[cell]
       }
     }

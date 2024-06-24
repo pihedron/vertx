@@ -15,6 +15,9 @@ export default class Entity {
   /** @type {number} */
   health
 
+  /** @type { 'idle' | 'walk' | 'slide' | 'crouch' | 'jump' } */
+  state = 'idle'
+
   /**
    * @param {number} health
    */

@@ -11,4 +11,7 @@ const io = new Server(3000, {
 io.on('connection', socket => {
   console.log(socket.handshake.address)
   socket.emit('init')
+  socket.on('move', payload => {
+    socket.broadcast.emit('move', payload)
+  })
 })
