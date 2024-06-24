@@ -3,7 +3,7 @@
 import { io } from 'socket.io-client'
 import Game from './src/Game.js'
 
-const socket = io('http://localhost:3000/')
+const socket = io()
 
 const canvas = document.querySelector('canvas')
 if (!canvas) {

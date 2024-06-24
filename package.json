@@ -1,17 +1,10 @@
 {
-  "name": "vertx",
-  "version": "1.0.0",
-  "description": "The best multiplayer indie game!",
-  "main": "index.js",
-  "scripts": {
-    "client": "cd client && npm i && npx live-server",
-    "server": "cd server && npm i && node .",
-    "start": "concurrently \"npm run client\" \"npm run server\""
-  },
-  "keywords": [],
-  "author": "pihedron",
-  "license": "MIT",
+  "type": "module",
   "dependencies": {
-    "concurrently": "^8.2.2"
+    "express": "^4.19.2",
+    "socket.io": "^4.7.5"
+  },
+  "devDependencies": {
+    "@types/socket.io": "^3.0.2"
   }
 }
