@@ -46,7 +46,7 @@ export default class Game {
   /** @type {number} */
   ticks = 0
 
-  /** @type {Record<string, Vector2>} */
+  /** @type {Record<string, Entity>} */
   others = {}
 
   /**
@@ -58,7 +58,22 @@ export default class Game {
     this.socket = socket
     this.socket.on('init', payload => {
       console.log(`joined server as ${this.socket.id}`)
+      socket.emit('join', new Packet(/** @type {string} */ (this.socket.id), this.player))
     })
+    this.socket.on('move', (/** @type {Packet} */ packet) => this.moveOtherPlayers(packet))
+    this.socket.on('show', (/** @type {Packet} */ packet) => {
+      this.others[packet.id] = new Entity(packet.entity.health)
+      this.moveOtherPlayers(packet)
+    })
+    this.socket.on('join', (/** @type {Packet} */ packet) => {
+      this.others[packet.id] = new Entity(packet.entity.health)
+      this.moveOtherPlayers(packet)
+      socket.emit('show', new Packet(/** @type {string} */ (this.socket.id), this.player))
+    })
+    socket.on('leave', (/** @type {string} */ id) => {
+      delete this.others[id]
+    })
+
     this.canvas = canvas
 
     const ctx = this.canvas.getContext('2d')
@@ -75,6 +90,14 @@ export default class Game {
     window.addEventListener('keyup', ev => this.keyup(ev))
 
     this.tick()
+  }
+
+  /**
+   * @param {Packet} packet
+   */
+  moveOtherPlayers(packet) {
+    const vec = new Vector2(packet.entity.pos.x, packet.entity.pos.y)
+    this.others[packet.id].pos = vec
   }
 
   /**
@@ -200,22 +223,16 @@ export default class Game {
     this.camera.follow()
 
     if (old.x !== this.player.pos.x || old.y !== this.player.pos.y) {
-      this.socket.emit('move', new Packet(/** @type {string} */ (this.socket.id), this.player.pos))
+      this.socket.emit('move', new Packet(/** @type {string} */ (this.socket.id), this.player))
     }
 
-    this.socket.on('move', (/** @type {Packet} */ packet) => {
-      this.others[packet.id] = packet.pos
-    })
+    this.ctx.fillStyle = '#fc6450'
+    for (const entity of Object.values(this.others)) {
+      this.drawEntity(entity)
+    }
 
     this.ctx.fillStyle = '#2d5ce1'
     this.drawEntity(this.player)
-
-    this.ctx.fillStyle = '#fc6450'
-    for (const vec of Object.values(this.others)) {
-      const entity = new Entity(8)
-      entity.pos = new Vector2(vec.x, vec.y)
-      this.drawEntity(entity)
-    }
 
     this.drawWorld()
 

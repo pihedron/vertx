@@ -1,21 +1,21 @@
 // @ts-check
 
-import Vector2 from './Vector2.js'
+import Entity from './Entity.js'
 
 export default class Packet {
   /** @type {string} */
   id
 
-  /** @type {Vector2} */
-  pos
+  /** @type {Entity} */
+  entity
 
   /**
    * creates a data packet
    * @param {string} id socket id
-   * @param {Vector2} pos entity position
+   * @param {Entity} entity entity position
    */
-  constructor(id, pos) {
+  constructor(id, entity) {
     this.id = id
-    this.pos = pos
+    this.entity = entity
   }
 }

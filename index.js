@@ -2,7 +2,7 @@
 
 import express from 'express'
 import { createServer } from 'http'
-import { Server } from 'socket.io'
+import { Server, Socket } from 'socket.io'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
 
@@ -20,18 +20,26 @@ const io = new Server(server, {
   }
 })
 
+/**
+ * @param {Socket} socket
+ * @param {any} ev
+ */
+function relay(socket, ev) {
+  socket.on(ev, payload => socket.broadcast.emit(ev, payload))
+}
+
 io.on('connection', socket => {
   console.log(`${socket.id} connected`)
-  
   socket.emit('init')
 
   socket.on('disconnect', reason => {
     console.log(`${socket.id} disconnected due to ${reason}`)
+    socket.broadcast.emit('leave', socket.id)
   })
 
-  socket.on('move', payload => {
-    socket.broadcast.emit('move', payload)
-  })
+  relay(socket, 'join') // tell everyone else a new player joined
+  relay(socket, 'show') // tell new player everybody else's positions
+  relay(socket, 'move') // update player position to other clients
 })
 
 app.get('/', (req, res) => {
