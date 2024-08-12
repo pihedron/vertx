@@ -160,7 +160,7 @@ export default class Game {
           if (entity.vel[axis] > 0) {
             entity.pos[axis] = pos[axis] - entity.dim[axis]
             if (axis == 'y') {
-              this.player.isGrounded = true
+              entity.isGrounded = true
             }
           }
           if (entity.vel[axis] < 0) {

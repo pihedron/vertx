@@ -18,6 +18,9 @@ export default class Entity {
   /** @type { 'idle' | 'walk' | 'slide' | 'crouch' | 'jump' } */
   state = 'idle'
 
+  /** @type {boolean} */
+  isGrounded = false
+
   /**
    * @param {number} health
    */
