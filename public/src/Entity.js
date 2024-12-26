@@ -21,6 +21,9 @@ export default class Entity {
   /** @type {boolean} */
   isGrounded = false
 
+  /** @type {number} */
+  standingOn = 0
+
   /**
    * @param {number} health
    */

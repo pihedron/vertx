@@ -10,7 +10,17 @@ export default class World {
     '*': -1,
     '_': 0,
     '#': 1,
+    '=': 2,
   }
+
+  /**
+   * @type {string[]}
+   */
+  hex = [
+    '',
+    '#08173f',
+    '#ffd900',
+  ]
 
   /**
    * flattened 2d grid of tiles

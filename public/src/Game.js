@@ -121,7 +121,7 @@ export default class Game {
     for (let i = 0; i < this.world.grid.length; i++) {
       const tile = this.world.grid[i]
       if (tile <= 0) continue
-      this.ctx.fillStyle = '#08173f'
+      this.ctx.fillStyle = this.world.hex[tile]
       const pos = this.offsetFromCamera((new Vector2(i % this.world.dim.x, Math.floor(i / this.world.dim.x))).scale(new Vector2(this.size, this.size)))
       this.ctx.fillRect(pos.x, pos.y, this.size, this.size)
     }
@@ -148,6 +148,8 @@ export default class Game {
    * @returns {void}
    */
   handleCollisions(entity, axis) {
+    if (axis === 'y') entity.standingOn = 0
+    let correction = null
     const bounds = new Vector2(1, 1)
     const middle = entity.pos.copy().scale(new Vector2(1 / this.size, 1 / this.size)).round()
     for (let x = middle.x - bounds.x; x <= middle.x + bounds.x; x++) {
@@ -158,17 +160,21 @@ export default class Game {
         const pos = (new Vector2(x, y)).scale(dim)
         if (entity.isTouching(pos, dim)) {
           if (entity.vel[axis] > 0) {
-            entity.pos[axis] = pos[axis] - entity.dim[axis]
-            if (axis == 'y') {
+            correction = pos[axis] - entity.dim[axis]
+            if (axis === 'y') {
               entity.isGrounded = true
+              entity.standingOn = Math.max(entity.standingOn, tile)
             }
           }
           if (entity.vel[axis] < 0) {
-            entity.pos[axis] = pos[axis] + dim[axis]
+            correction = pos[axis] + dim[axis]
           }
-          entity.vel[axis] = 0
         }
       }
+    }
+    if (correction !== null) {
+      entity.pos[axis] = correction
+      entity.vel[axis] = 0
     }
   }
 
@@ -184,6 +190,8 @@ export default class Game {
 
     if (this.pressed['w'] && this.player.isGrounded) {
       this.player.vel.y = -this.player.jumpPower
+      console.log(this.player.standingOn)
+      if (this.player.standingOn === 2) this.player.vel.y -= this.player.jumpPower / 2
     }
 
     this.player.isGrounded = false
