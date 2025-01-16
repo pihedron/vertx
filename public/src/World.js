@@ -11,15 +11,17 @@ export default class World {
     '_': 0,
     '#': 1,
     '=': 2,
+    '%': 3,
   }
 
   /**
    * @type {string[]}
    */
   hex = [
-    '',
+    '#08173f',
     '#08173f',
     '#ffd900',
+    '#ff2040',
   ]
 
   /**
@@ -27,6 +29,12 @@ export default class World {
    * @type {number[]} 
    */
   grid = []
+
+  /**
+   * corner rounding data
+   * @type {boolean[][]} 
+   */
+  corners = []
 
   /** @type {Vector2} */
   spawn
@@ -48,10 +56,14 @@ export default class World {
       const cells = row.split('')
       for (let x = 0; x < cells.length; x++) {
         const cell = cells[x]
-        if (cell === '*') {
-          this.spawn = new Vector2(x, y)
+        const id = this.indexer[cell]
+        this.grid[this.at(x, y)] = id
+        this.corners[this.at(x, y)] = []
+        if (id < 0) {
+          if (id === -1) this.spawn = new Vector2(x, y)
+        } else  {
+          this.smooth(id, x, y)
         }
-        this.grid[this.at(x, y)] = this.indexer[cell]
       }
     }
   }
@@ -72,5 +84,56 @@ export default class World {
   read(x, y) {
     if (x < 0 || x >= this.dim.x || y < 0 || y >= this.dim.y) return 0
     return this.grid[this.at(x, y)]
+  }
+
+  /**
+   * @param {number} id
+   */
+  isSolid(id) {
+    return id > 0
+  }
+
+  /**
+   * @param {number} x
+   * @param {number} y
+   * @param {number} i
+   */
+  sharpen(x, y, i) {
+    if (x < 0 || y < 0) return
+    this.corners[this.at(x, y)][i] = false
+  }
+
+  /**
+   * @param {number} id
+   * @param {number} x
+   * @param {number} y
+   */
+  smooth(id, x, y) {
+    const solid = this.isSolid(id)
+    for (let i = 0; i < 4; i++) {
+      this.corners[this.at(x, y)][i] = true // all round
+    }
+    const left = this.read(x - 1, y)
+    const up = this.read(x, y - 1)
+    if (solid === this.isSolid(left)) {
+      this.sharpen(x, y, 0)
+      this.sharpen(x, y, 3)
+      this.sharpen(x - 1, y, 1)
+      this.sharpen(x - 1, y, 2)
+    }
+    if (solid === this.isSolid(up)) {
+      this.sharpen(x, y, 0)
+      this.sharpen(x, y, 1)
+      this.sharpen(x, y - 1, 2)
+      this.sharpen(x, y - 1, 3)
+    }
+    if (x === this.dim.x - 1 && !solid) {
+      this.sharpen(x, y, 1)
+      this.sharpen(x, y, 2)
+    }
+    if (y === this.dim.y - 1 && !solid) {
+      this.sharpen(x, y, 2)
+      this.sharpen(x, y, 3)
+    }
   }
 }

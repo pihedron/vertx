@@ -15,6 +15,9 @@ export default class Game {
   /** @type {HTMLCanvasElement} */
   canvas
 
+  /** @type {Vector2} */
+  view
+
   /** @type {CanvasRenderingContext2D} */
   ctx
 
@@ -86,44 +89,18 @@ export default class Game {
     this.world = new World(map)
     this.player.pos = this.world.spawn.scale(new Vector2(this.size, this.size))
 
-    window.addEventListener('keydown', ev => this.keydown(ev))
-    window.addEventListener('keyup', ev => this.keyup(ev))
+    this.register('keydown', 'keyup', 'click')
 
     this.tick()
   }
 
   /**
-   * @param {Packet} packet
+   * binds event strings to event listeners within the class
+   * @param {(keyof WindowEventMap)[]} events list of event names as strings
    */
-  moveOtherPlayers(packet) {
-    const vec = new Vector2(packet.entity.pos.x, packet.entity.pos.y)
-    this.others[packet.id].pos = vec
-  }
-
-  /**
-   * offsets a vector relative to the camera
-   * @param {Vector2} vec vector to offset
-   * @returns {Vector2} position vector relative to camera
-   */
-  offsetFromCamera(vec) {
-    return vec.copy().translate(this.camera.pos.copy().scale(new Vector2(-1, -1))).translate(new Vector2(this.canvas.width / 2, this.canvas.height / 2)).round()
-  }
-
-  /**
-   * @param {Entity} entity
-   */
-  drawEntity(entity) {
-    const pos = this.offsetFromCamera(entity.pos)
-    this.ctx.fillRect(pos.x, pos.y, entity.dim.x, entity.dim.y)
-  }
-
-  drawWorld() {
-    for (let i = 0; i < this.world.grid.length; i++) {
-      const tile = this.world.grid[i]
-      if (tile <= 0) continue
-      this.ctx.fillStyle = this.world.hex[tile]
-      const pos = this.offsetFromCamera((new Vector2(i % this.world.dim.x, Math.floor(i / this.world.dim.x))).scale(new Vector2(this.size, this.size)))
-      this.ctx.fillRect(pos.x, pos.y, this.size, this.size)
+  register(...events) {
+    for (const event of events) {
+      window.addEventListener(event, ev => this[event](ev))
     }
   }
 
@@ -142,6 +119,67 @@ export default class Game {
   }
 
   /**
+   * @param {MouseEvent} ev click event
+   */
+  click(ev) {
+    const pos = new Vector2(ev.clientX, ev.clientY)
+    pos.translate(this.view.copy().flip().halve()).translate(this.camera.pos).floor()
+    this.player.pos = pos.copy().translate(this.player.dim.copy().flip().halve())
+  }
+
+  /**
+   * @param {Packet} packet
+   */
+  moveOtherPlayers(packet) {
+    const vec = new Vector2(packet.entity.pos.x, packet.entity.pos.y)
+    this.others[packet.id].pos = vec
+  }
+
+  /**
+   * offsets a vector relative to the camera
+   * @param {Vector2} vec vector to offset
+   * @returns {Vector2} position vector relative to camera
+   */
+  offsetFromCamera(vec) {
+    return vec.copy().translate(this.camera.pos.copy().flip()).translate(this.view.copy().halve()).round()
+  }
+
+  /**
+   * @param {Entity} entity
+   */
+  drawEntity(entity) {
+    const pos = this.offsetFromCamera(entity.pos)
+    this.ctx.beginPath()
+    this.ctx.roundRect(pos.x, pos.y, entity.dim.x, entity.dim.y, 4)
+    this.ctx.fill()
+  }
+
+  drawWorld() {
+    for (let i = 0; i < this.world.grid.length; i++) {
+      const tile = this.world.grid[i]
+      const corners = this.world.corners[i]
+      const pos = this.offsetFromCamera((new Vector2(i % this.world.dim.x, Math.floor(i / this.world.dim.x))).scale(new Vector2(this.size, this.size)))
+      if (tile < 0) continue
+      if (tile === 0) {
+        this.ctx.save() // save frame to prevent clipping of whole world
+        let region = new Path2D()
+        region.rect(pos.x, pos.y, this.size, this.size)
+        region.roundRect(pos.x, pos.y, this.size, this.size, corners.map(bool => bool ? 8 : 0))
+        this.ctx.clip(region, 'evenodd')
+        this.ctx.fillStyle = this.world.hex[tile]
+        this.ctx.fillRect(pos.x, pos.y, this.size, this.size)
+        this.ctx.restore() // draw saved frame
+        continue
+      }
+      this.ctx.fillStyle = this.world.hex[tile]
+      // this.ctx.fillRect(pos.x, pos.y, this.size, this.size)
+      this.ctx.beginPath()
+      this.ctx.roundRect(pos.x, pos.y, this.size, this.size, corners.map(bool => bool ? 8 : 0))
+      this.ctx.fill()
+    }
+  }
+
+  /**
    * handles collisions
    * @param {Entity} entity entity
    * @param {string} axis
@@ -150,6 +188,7 @@ export default class Game {
   handleCollisions(entity, axis) {
     if (axis === 'y') entity.standingOn = 0
     let correction = null
+    let rebound = null
     const bounds = new Vector2(1, 1)
     const middle = entity.pos.copy().scale(new Vector2(1 / this.size, 1 / this.size)).round()
     for (let x = middle.x - bounds.x; x <= middle.x + bounds.x; x++) {
@@ -169,12 +208,15 @@ export default class Game {
           if (entity.vel[axis] < 0) {
             correction = pos[axis] + dim[axis]
           }
+          if (tile === 3) {
+            rebound = -entity.vel[axis]
+          }
         }
       }
     }
     if (correction !== null) {
       entity.pos[axis] = correction
-      entity.vel[axis] = 0
+      entity.vel[axis] = rebound ?? 0
     }
   }
 
@@ -186,12 +228,14 @@ export default class Game {
     this.canvas.width = document.body.clientWidth
     this.canvas.height = document.body.clientHeight
 
+    this.view = new Vector2(this.canvas.width, this.canvas.height)
+
     this.player.vel.y += this.gravity
 
     if (this.pressed['w'] && this.player.isGrounded) {
       this.player.vel.y = -this.player.jumpPower
       console.log(this.player.standingOn)
-      if (this.player.standingOn === 2) this.player.vel.y -= this.player.jumpPower / 2
+      if (this.player.standingOn === 2) this.player.vel.y -= this.player.jumpPower / 4
     }
 
     this.player.isGrounded = false

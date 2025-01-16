@@ -60,4 +60,18 @@ export default class Vector2 {
     this.y = Math.ceil(this.y)
     return this
   }
+
+  flip() {
+    this.x *= -1
+    this.y *= -1
+    return this
+  }
+
+  halve() {
+    this.x *= 1 / 2
+    this.y *= 1 / 2
+    return this
+  }
 }
+
+export const UNIT = new Vector2(1, 1)

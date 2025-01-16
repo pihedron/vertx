@@ -1,7 +1,7 @@
 // @ts-check
 
 import Entity from './Entity.js'
-import Vector2 from './Vector2.js'
+import Vector2, { UNIT } from './Vector2.js'
 
 export default class Camera {
   /** @type {Vector2} */
@@ -18,6 +18,7 @@ export default class Camera {
   }
 
   follow() {
-    this.pos = this.target.pos.copy().translate(this.target.dim.copy().scale(new Vector2(0.5, 0.5)))
+    const point = this.target.pos.copy().translate(this.target.dim.copy().scale(new Vector2(0.5, 0.5)))
+    this.pos.translate(point.translate(this.pos.copy().flip()).scale(UNIT.copy().halve())).round()
   }
 }
